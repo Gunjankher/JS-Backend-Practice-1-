@@ -29,9 +29,19 @@ throw new ApiError(400, "All Fields are required")
 
 
 // (3) check if user already exits 
-User.findone({
-    
+ const existedUser = await User.findOne({
+$or:[{username}, {email}]
 })
+
+if(existedUser){
+    throw new ApiError(409, "User with email or usename already exists")
+}
+
+
+
+// (4) check for images and avatar 
+
+
 
 
 

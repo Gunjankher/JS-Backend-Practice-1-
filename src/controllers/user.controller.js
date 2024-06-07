@@ -1,4 +1,6 @@
 import { asyncHandlar } from "../utilis/asyncHandlar.js";
+import {ApiError} from '../utilis/ApiError.js'
+import {User} from '../models/user.model.js'
 
 
 const registerUser = asyncHandlar(async(req,res)=>{
@@ -16,10 +18,20 @@ const registerUser = asyncHandlar(async(req,res)=>{
 const{fullName,email,username,password} = req.body
 console.log("email" , email);
 
+ 
+
+// (2)  validation - not empty 
+if(
+[fullName,email,username,password].some((field)=>field.trim() === "")
+){
+throw new ApiError(400, "All Fields are required")
+}
 
 
-
-
+// (3) check if user already exits 
+User.findone({
+    
+})
 
 
 

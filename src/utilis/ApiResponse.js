@@ -6,3 +6,6 @@ this.message = message
 this.statusCode = statusCode<400
     }
 }
+
+
+export {ApiResponse}

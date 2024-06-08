@@ -1,6 +1,8 @@
 import { asyncHandlar } from "../utilis/asyncHandlar.js";
 import {ApiError} from '../utilis/ApiError.js'
 import {User} from '../models/user.model.js'
+import {uploadOnCloudinary} from '../utilis/cloudinary.js'
+import { ApiResponse } from "../utilis/ApiResponse.js";
 
 
 const registerUser = asyncHandlar(async(req,res)=>{
@@ -51,7 +53,43 @@ if(!avatarLocalPath) {
 
 //(5) upload them at cloudinary
 
+ const avatar = uploadOnCloudinary(avatarLocalPath)
+const coverImage = uploadOnCloudinary(coverImageLocalPath)
 
+
+if(!avatar){
+    throw new ApiError(400 , "Avatar Image is Must required")
+}
+
+// (6) create user object and create entry in Database 
+// (7) remove password and refresh token field
+// (8) check for user Creation  
+
+
+ const user = await User.create({
+    fullName,
+    password,
+    email,
+    avatar : avatar.url,
+    coverImage: coverImage?.url || "",
+    username : username.toLowerCase()
+})
+
+
+ const createdUser = User.findById(user._id).select(
+    "-password refreshToken"
+)
+
+if(!createdUser){
+throw new ApiError(500, "Something Went wrong while registering the  User")
+}
+
+
+// (9) return response 
+
+return res.status(201).json(
+    new ApiResponse(200,createdUser,"User Registered Successfully")
+)
 
 
 })

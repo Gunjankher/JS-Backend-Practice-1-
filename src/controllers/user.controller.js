@@ -41,10 +41,19 @@ if(existedUser){
 
 // (4) check for images and avatar 
 
+ const avatarLocalPath = req.files?.avatar[0]?.path
+  const coverImageLocalPath = req.files?.coverImage[0]?.path
+
+if(!avatarLocalPath) {
+    throw new ApiError(400 , "Avatar Image is required")
+}
+
+
+//(5) upload them at cloudinary
 
 
 
 
 })
 
-export {registerUser}
+export {registerUser}  

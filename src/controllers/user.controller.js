@@ -44,7 +44,20 @@ if(existedUser){
 // (4) check for images and avatar 
 
  const avatarLocalPath = req.files?.avatar[0]?.path
-  const coverImageLocalPath = req.files?.coverImage[0]?.path
+//   const coverImageLocalPath = req.files?.coverImage[0]?.path
+//   console.log(req.files);
+
+// handling the coverImage 
+
+let coverImageLocalPath;
+
+if(req.files && Array.isArray(req.files.coverImage)&& req.files.coverImage.length > 0){
+    coverImageLocalPath = req.files.coverImage[0].path
+}
+
+
+
+
 
 if(!avatarLocalPath) {
     throw new ApiError(400 , "Avatar Image is required")
@@ -53,8 +66,8 @@ if(!avatarLocalPath) {
 
 //(5) upload them at cloudinary
 
- const avatar = uploadOnCloudinary(avatarLocalPath)
-const coverImage = uploadOnCloudinary(coverImageLocalPath)
+ const avatar =  await uploadOnCloudinary(avatarLocalPath)
+const coverImage =  await uploadOnCloudinary(coverImageLocalPath)
 
 
 if(!avatar){
@@ -76,8 +89,8 @@ if(!avatar){
 })
 
 
- const createdUser = User.findById(user._id).select(
-    "-password refreshToken"
+ const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken"
 )
 
 if(!createdUser){

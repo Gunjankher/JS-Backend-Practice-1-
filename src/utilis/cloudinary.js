@@ -20,7 +20,8 @@ try {
         resource_type :'auto'
     })
 //file has been uploded sucessfully 
-console.log("File has been Uploaded on Cloudinary", response.url);
+//console.log("File has been Uploaded on Cloudinary", response.url);
+fs.unlinkSync(localFilePath)
 
 return response
 

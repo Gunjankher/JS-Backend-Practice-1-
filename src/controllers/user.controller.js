@@ -24,7 +24,7 @@ console.log("email" , email);
 
 // (2)  validation - not empty 
 if(
-[fullName,email,username,password].some((field)=>field.trim() === "")
+[fullName,email,username,password].some((field)=>field?.trim() === "")
 ){
 throw new ApiError(400, "All Fields are required")
 }

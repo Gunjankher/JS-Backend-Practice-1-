@@ -185,6 +185,14 @@ return res
 })
 
 
+
+const logoutUser = asyncHandlar(async(req,res)=>{
+
+
+  
+})
+
+
 export { 
   registerUser,
   loginUser, 

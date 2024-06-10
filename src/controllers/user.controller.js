@@ -4,6 +4,27 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utilis/cloudinary.js";
 import { ApiResponse } from "../utilis/ApiResponse.js";
 
+
+const generateAccessTokenAndRefeshToken = async(userId)=>{
+
+try {
+   const user = await User.findById(userId)
+   const accessToken = user.generateAccessToken()
+   const refershToken = user.generateRefreshToken()
+   user.refershToken = refershToken
+   await user.save({validateBeforeSave : false})
+return {accessToken,refershToken}
+
+} catch (error) {
+  throw new ApiError(401, "Something went Wrong while Generating Access and Refesh Token ")
+}
+
+
+}
+ 
+
+
+
 const registerUser = asyncHandlar(async (req, res) => {
   // get user details from frontend
   // validation- not empty
@@ -96,10 +117,54 @@ const registerUser = asyncHandlar(async (req, res) => {
 
 
 
+const loginUser = asyncHandlar(async(req,res)=>{
+
+// req data from body
+// username or email 
+// find the user 
+// password check 
+// access and refresh token 
+// send cookie 
 
 
 
 
 
+// (1) req data from body
 
-export { registerUser };
+const{email,username,password} = req.body 
+if(!email || !username){
+  throw new ApiError(400 , "Username or Email is required")
+}
+
+
+
+// (2) email or username
+ const user = await User.findOne({
+  $or:[{username}, {email}]
+})
+
+
+
+// (3) check for password
+  const isPasswordValid = await user.isPasswordCorrect(password)
+  if(isPasswordValid){
+    throw new ApiError(400 , "Password is invalid ")
+  }
+
+
+// (4) Access and Refesh token  
+const {accessToken,refershToken} = await generateAccessTokenAndRefeshToken(user._id)
+
+
+})
+
+
+
+
+
+export { 
+  registerUser,
+  loginUser, 
+
+};

@@ -153,14 +153,36 @@ if(!email || !username){
   }
 
 
-// (4) Access and Refesh token  
+// (4) Access and Refesh token  and method of generating is on above the code  
 const {accessToken,refershToken} = await generateAccessTokenAndRefeshToken(user._id)
 
+ const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
+// (5) send cookie 
+
+const options = {
+httpOnly : true,
+secure : true   
+}
+
+
+
+return res
+.status(200)
+.cookie("accessToken", accessToken, options)
+.cookie("refreshToken", refershToken, options)
+.json(
+  new ApiResponse(
+200, 
+{
+  user: loggedInUser,accessToken, refershToken
+},
+
+"User Logged in SuccessFully"
+
+  )
+)
 })
-
-
-
 
 
 export { 

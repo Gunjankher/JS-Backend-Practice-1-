@@ -322,7 +322,7 @@ const updateUserAvatar = asyncHandlar(async(req,res)=>{
   throw new ApiError(400, "Avatar file is missing")
 }
 
-const avatar = uploadOnCloudinary(avatarLocalPath)
+const avatar = await  uploadOnCloudinary(avatarLocalPath)
 
 
 if (!avatar.url) {
@@ -331,7 +331,7 @@ if (!avatar.url) {
 }
 
 
-User.findByIdAndUpdate(
+  const user = await User.findByIdAndUpdate(
   req.user?._id,
   {
     avatar: avatar.url

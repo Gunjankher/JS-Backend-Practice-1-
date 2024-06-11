@@ -392,4 +392,5 @@ export {
   getCurrentUser,
   updateUserAvatar,
   updateUserCoverImage,
+  updateAccountDetails,
 };

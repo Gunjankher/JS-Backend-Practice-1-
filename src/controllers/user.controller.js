@@ -133,7 +133,7 @@ const loginUser = asyncHandlar(async(req,res)=>{
 // (1) req data from body
 
 const{email,username,password} = req.body 
-if(!email || !username){
+if(!email && !username){
   throw new ApiError(400 , "Username or Email is required")
 }
 
@@ -148,7 +148,7 @@ if(!email || !username){
 
 // (3) check for password
   const isPasswordValid = await user.isPasswordCorrect(password)
-  if(isPasswordValid){
+  if(!isPasswordValid){
     throw new ApiError(400 , "Password is invalid ")
   }
 

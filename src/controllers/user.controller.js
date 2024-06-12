@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utilis/cloudinary.js";
 import { ApiResponse } from "../utilis/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { json } from "express";
+import mongoose from "mongoose";
 
 const generateAccessTokenAndRefeshToken = async (userId) => {
   try {
@@ -481,6 +482,72 @@ return res
   new ApiResponse(200, channel[0], "User channel fetched successfully")
 )
 
+
+})
+
+
+const getWatchHistory = asyncHandlar(async(req,res)=>{
+
+  const user = await User.aggregate([
+
+{
+  $match :{
+    _id: new mongoose.Types.ObjectId(req.user._id)
+  }
+},
+
+
+{
+  $lookup : {
+    from : "videos",   // we are in user field
+    localField : "watchHistory",
+    foreignField: "_id",
+    as : "watchHistory",
+pipeline:[   
+  {
+    $lookup :{     // now we traveled to the videofield
+      from : "users",
+      localField : "owner",
+      foreignField : "_id",
+      as : "owner",
+pipeline :[   // we travel to user field again  probabely
+  
+  {
+    $project :{
+      fullName : 1,
+      username : 1,
+      avatar : 1
+    }
+  },
+
+]
+
+
+    }
+  },{
+    $addFields :{
+      owner : {
+        $first : "$owner"
+      }
+    }
+  }
+]
+  }
+}
+
+
+  ])
+
+
+  return res
+  .status(200)
+  .json(
+      new ApiResponse(
+          200,
+          user[0].watchHistory,
+          "Watch history fetched successfully"
+      )
+  )
 
 })
 

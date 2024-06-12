@@ -345,7 +345,7 @@ return res
 )
 })
 
-const updateUserCoverImage = asyncHandlar(async(req, res) => {
+const updateUserCoverImage = asyncHandlar(async(req,res) => {
   const coverImageLocalPath = req.file?.path
 
   if (!coverImageLocalPath) {
@@ -380,6 +380,72 @@ const updateUserCoverImage = asyncHandlar(async(req, res) => {
 })
 
 
+const getUserChannelProfile = asyncHandlar(async(req,res)=>{
+
+const {username} = req.params
+
+ 
+if(!username?.trim()){
+  throw new ApiError(401, "UserName is Missing")
+}
+
+ const channel =  await User.aggregate([
+
+
+  // first Pipeline
+{
+  $match:{
+    username : username?.toLowerCase()
+  }
+},
+
+
+// Second pipline to get channel subscribers
+
+{
+
+  $lookup:{
+    from : "subscriptions",
+    localField:"_id",
+    foreignField : "channel",
+    as : "subscribers"
+  }
+},
+
+// third pipeline to get channel he subscribed to 
+{
+
+  $lookup:{
+    from : "subscriptions",
+    localField:"_id",
+    foreignField : "subscriber",
+    as : "subscribedTo"
+  }
+},
+
+// fourth pipeline to count the subscribers
+
+{
+
+$addFields :{
+ subscribersCount :{
+   $size : "$subscribers"
+ },
+
+ channelIsSubscribedCount :{
+  $size : "$subscribedTo"
+ }
+
+}
+
+}
+
+
+])
+
+
+
+})
 
 
 

@@ -123,15 +123,21 @@ const loginUser = asyncHandlar(async (req, res) => {
 
   // (1) req data from body
 
+  
+  console.log("Request body:", req.body);
   const { email, username, password } = req.body;
   if (!(username || email)) {
     throw new ApiError(400, "username or email is required.");
-}
+  }
 
   // (2) email or username
   const user = await User.findOne({
     $or: [{ username }, { email }],
   });
+
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
 
   // (3) check for password
   const isPasswordValid = await user.isPasswordCorrect(password);
@@ -148,6 +154,10 @@ const loginUser = asyncHandlar(async (req, res) => {
     "-password -refreshToken",
   );
 
+  if(loggedInUser){
+    console.log(`he is in`);
+    
+  }
   // (5) send cookie
 
   const options = {

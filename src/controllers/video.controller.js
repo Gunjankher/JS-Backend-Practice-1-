@@ -185,18 +185,15 @@ try {
 
 
 const deleteVideo = asyncHandlar(async(req,res)=>{
-    console.log(`user`, req.user);
     
-    console.log(`user which was undefiend`, req.user);
-    console.log('Uploaded file firdt tome :', req.file);
+    
+   
     
     try {
-        const {title,description} = req.body
+
         const {videoId} = req.params
         
-        if([title,description].some((field)=>field?.trim()===0)){
-            throw new ApiError(401,`All Fields are Required`)
-        }
+       
         
         if (!isValidObjectId(videoId)) {
             throw new ApiError(400, "Invalid videoId");
@@ -220,51 +217,20 @@ const deleteVideo = asyncHandlar(async(req,res)=>{
             );
         }
     
+       const videoDeleted =  await Video.findByIdAndDelete(video?._id)
         
-        
-        
-        const thumbnailToDelete = video.thumbnail.public_id
-        
-        const thumbnailLocalPath = req.file?.path
-        
-        
-        
-        if(!thumbnailLocalPath){
-            throw new ApiError(400, `thumbnailLocalPath is required`)
-            }
-            
-        
-         const thumbnail = await uploadOnCloudinary(thumbnailLocalPath)
-        
-        if(!thumbnail){
-            throw new ApiError(400, `cannot found thumbnail`)
+        if(!videoDeleted){
+            throw new ApiError(400,`Failed to delete the video pls try again`)
         }
         
-         const updatedVideo = await Video.findByIdAndUpdate(
-            videoId,
-            {
-                $set :{
-                    title,
-                    description,
-                    thumbnail :{
-        public_id :thumbnail.public_id,
-        url:thumbnail.url
-                    }
-                    }
-                },
-            {new :true}
-         )
-        
-        
-        
-        
-        if(updatedVideo){
-       await  deleteOnCloudinary(thumbnailToDelete)
-        }
-        
+await deleteOnCloudinary(video.thumbnail.public_id)
+await deleteOnCloudinary(video.videoFile.public_id,"video")
+
+
+
         return res
                 .status(200)
-                .json(new ApiResponse(200, updatedVideo, "Video updated successfully"));
+                .json(new ApiResponse(200, "Video deleted successfully"));
         
         
     } catch (error) {
@@ -274,7 +240,50 @@ const deleteVideo = asyncHandlar(async(req,res)=>{
     })
     
     
-    
+    const isTogglePublished = asyncHandlar(async(req,res)=>{
+        const { videoId } = req.params;
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId");
+    }
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    if (video?.owner.toString() !== req.user?._id.toString()) {
+        throw new ApiError(
+            400,
+            "You can't toogle publish status as you are not the owner"
+        );
+    }
+
+    const toggledVideoPublish = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set: {
+                isPublished: !video?.isPublished
+            }
+        },
+        { new: true }
+    );
+
+    if (!toggledVideoPublish) {
+        throw new ApiError(500, "Failed to toogle video publish status");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                { isPublished: toggledVideoPublish.isPublished },
+                "Video publish toggled successfully"
+            )
+        );
+    })
 
 
 
@@ -284,4 +293,5 @@ export {
     publishVideo,
     updateVideo,
     deleteVideo,
+    isTogglePublished,
 }

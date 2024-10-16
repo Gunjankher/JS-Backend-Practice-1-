@@ -200,7 +200,6 @@ return res
 })
 
 
-
 const deletecomment = asyncHandlar(async(req,res)=>{
 
     // find the comment id and conditon it 
@@ -243,7 +242,4 @@ export {
     addComment,
     updateComment,
     deletecomment,
-
-
-    
 }

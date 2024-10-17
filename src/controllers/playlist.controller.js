@@ -11,6 +11,10 @@ const createPlaylist = asyncHandlar(async(req,res)=>{
     // check if name and description is there or not 
     // create playlist  with name ,descripiton, owner, check it 
     // return the response 
+
+const {name,description} = req.body
+
+
 })
 
 

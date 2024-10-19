@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
-import { Comment } from "../models/comment.model";
-import { Video } from "../models/video.model";
-import { ApiError } from "../utilis/ApiError";
-import { ApiResponse } from "../utilis/ApiResponse";
-import { asyncHandlar } from "../utilis/asyncHandlar";
-import { Like } from "../models/like.model";
+import { Comment } from "../models/comment.model.js";
+import { Video } from "../models/video.model.js";
+import { ApiError } from "../utilis/ApiError.js";
+import { ApiResponse } from "../utilis/ApiResponse.js";
+import { asyncHandlar } from "../utilis/asyncHandlar.js";
+import { Like } from "../models/like.model.js";
 
 const getVideoComments = asyncHandlar(async(req,res)=>{
 
@@ -165,7 +165,7 @@ if(!content){
     throw new ApiError(404, "Content is required")
 }
 
- const comment = await Comment.findById(videoId)
+ const comment = await Comment.findById(commentId)
 
 if(!comment){
 throw new ApiError(500, `no Comment Found`)
@@ -200,7 +200,7 @@ return res
 })
 
 
-const deletecomment = asyncHandlar(async(req,res)=>{
+const deleteComment = asyncHandlar(async(req,res)=>{
 
     // find the comment id and conditon it 
     // find the id of comment id
@@ -209,7 +209,7 @@ const deletecomment = asyncHandlar(async(req,res)=>{
     // delete the like also with deleteMany 
 
 
-const {commentId} = req.parans
+const {commentId} = req.params
 
 const comment = await Comment.findById(commentId)
 
@@ -232,7 +232,7 @@ await Like.deleteMany({
 
 return res
 .status(200)
-.json(new ApiResponse,`CommentDeleted Sucessfully`)
+.json(new ApiResponse, {commentId}`Comment Deleted Sucessfully`)
 
 
 })
@@ -241,5 +241,5 @@ export {
     getVideoComments,
     addComment,
     updateComment,
-    deletecomment,
+    deleteComment,
 }

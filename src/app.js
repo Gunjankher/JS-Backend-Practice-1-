@@ -30,7 +30,7 @@ import likeRouter from './routes/like.router.js'
 
 app.use("/api/v1/users" , userRouter)
 app.use("/api/v1/video", videoRouter)
-app.use("/api/v1/like", likeRouter)
+app.use("/api/v1/likes", likeRouter)
 
 
 

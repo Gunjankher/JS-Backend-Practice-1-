@@ -105,9 +105,9 @@ const comments = await Comment.aggregatePaginate(
 )
 
 return res
-.status(200
+.status(200)
 .json(new ApiResponse(200,comments,"Comments fetched Sucessfully"))
-)
+
 
 })
 

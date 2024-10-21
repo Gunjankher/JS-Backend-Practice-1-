@@ -1,9 +1,9 @@
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 import { Playlist } from "../models/playlist.model.js";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utilis/ApiError.js";
-import { ApiResponse } from "../utilis/ApiResponse";
-import { asyncHandlar } from "../utilis/asyncHandlar.js";
+import { ApiResponse } from "../utilis/ApiResponse.js";
+import { asyncHandlar } from "../utilis/asyncHandlar.js"
 
 
 
@@ -15,7 +15,7 @@ const createPlaylist = asyncHandlar(async(req,res)=>{
 
 const {name,description} = req.body
 
-if(!name || description) {
+if(!name || !description) {
     throw new ApiError(400, `name and description both are required`)
 }
 
@@ -343,7 +343,7 @@ const getPlaylistById = asyncHandlar(async(req,res)=>{
 
     return res
         .status(200)
-        .json(new ApiResponse(200, playlistVideos[0], "playlist fetched successfully"));
+        .json(new ApiResponse(200, playlistVideos[0],"playlist fetched successfully"));
 
 
 

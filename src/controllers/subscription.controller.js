@@ -54,7 +54,7 @@ const toggleSubscription = asyncHandlar(async(req,res)=>{
 })
 
 
-getUserChannelSubscribers = asyncHandlar(async(req,res)=>{
+const getUserChannelSubscribers = asyncHandlar(async(req,res)=>{
     // get the channel id 
     // check if that is valid obj id
     // aggregate the subscirbers 

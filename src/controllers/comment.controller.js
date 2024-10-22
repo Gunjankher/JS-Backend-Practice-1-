@@ -6,240 +6,198 @@ import { ApiResponse } from "../utilis/ApiResponse.js";
 import { asyncHandlar } from "../utilis/asyncHandlar.js";
 import { Like } from "../models/like.model.js";
 
-const getVideoComments = asyncHandlar(async(req,res)=>{
+const getVideoComments = asyncHandlar(async (req, res) => {
+  const { videoId } = req.params;
+  const { page = 1, limit = 10 } = req.query;
 
-const {videoId} = req.params
-const {page =1,limit =10} = req.query
+  const video = await Video.findById(videoId);
 
+  if (!video) {
+    throw new ApiError(400, `Video Not Found`);
+  }
 
-const video = await Video.findById(videoId)
+  const commentsAggregate = Comment.aggregate([
+    {
+      $match: {
+        Video: new mongoose.Types.ObjectId(videoId),
+      },
+    },
 
-if(!video){
-    throw new ApiError(400, `Video Not Found`)
-}
+    // 1st Pipeline
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "owner",
+      },
+    },
 
+    // 2nd PipeLine
 
-const commentsAggregate = Comment.aggregate([
+    {
+      $lookup: {
+        from: "likes",
+        localField: "_id",
+        foreignField: "comment",
+        as: "likes",
+      },
+    },
 
-{
-    $match :{
-        Video :new mongoose.Types.ObjectId(videoId)
-    }
-},
-
-
-// 1st Pipeline
-{
-    $lookup :{
-        from :"users",
-        localField :"owner",
-        foreignField :"_id",
-        as :"owner"
-    }
-},
-
-
-// 2nd PipeLine
-
-
-{
-    $lookup :{
-        from :"likes",
-        localField :"_id",
-        foreignField :"comment",
-        as :"likes"
-    }
-},
-
-
-{
-    $addFields :{
-likesCount :{
-    $size :'$likes'
-},
-owner :{
-    $first :"$owner"
-},
-
-isLiked :{
-    $cond :{
-        if :{$in :[req.user?._id,"$likes.likedBy"]},
-        then :true,
-        else :false,
-    }
-}
-
-    }
-},
-
-{
-    $sort :{
-        createdAt : -1
-    }
-},
-
-{
-    $project :{
-        content :1,
-        createdAt :1,
-        likesCount :1,
-        owner :{
-            username:1,
-            fullName:1,
-            "avatar.url":1
+    {
+      $addFields: {
+        likesCount: {
+          $size: "$likes",
         },
-        isLiked:1
-    }
-}
-])
+        owner: {
+          $first: "$owner",
+        },
 
-const options = {
+        isLiked: {
+          $cond: {
+            if: { $in: [req.user?._id, "$likes.likedBy"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+
+    {
+      $sort: {
+        createdAt: -1,
+      },
+    },
+
+    {
+      $project: {
+        content: 1,
+        createdAt: 1,
+        likesCount: 1,
+        owner: {
+          username: 1,
+          fullName: 1,
+          "avatar.url": 1,
+        },
+        isLiked: 1,
+      },
+    },
+  ]);
+
+  const options = {
     page: parseInt(page, 10),
-    limit: parseInt(limit, 10)
-};
+    limit: parseInt(limit, 10),
+  };
 
+  const comments = await Comment.aggregatePaginate(commentsAggregate, options);
 
-const comments = await Comment.aggregatePaginate(
-    commentsAggregate,
-    options
-)
+  return res
+    .status(200)
+    .json(new ApiResponse(200, comments, "Comments fetched Sucessfully"));
+});
 
-return res
-.status(200)
-.json(new ApiResponse(200,comments,"Comments fetched Sucessfully"))
+const addComment = asyncHandlar(async (req, res) => {
+  // get videoId and get req.body
+  // find the video and check if video is there
+  // then create comment
+  // check if comment is there
+  // return the response
 
+  const { videoId } = req.params;
+  const { content } = req.body;
 
-})
+  const video = await Video.findById(videoId);
 
+  if (!video) {
+    throw new ApiError(404, "Video is not Found");
+  }
 
-const addComment = asyncHandlar(async(req,res)=>{
-
-// get videoId and get req.body
-// find the video and check if video is there 
-// then create comment
-// check if comment is there 
-// return the response
-
-
-    const {videoId} = req.params
-    const {content} = req.body
-
-
-    const video = await Video.findById(videoId)
-
-    if(!video){
-        throw new ApiError(404, "Video is not Found")
-    }
-
-const comment = await Comment.create({
+  const comment = await Comment.create({
     content,
-    video :videoId,
-    owner :req.user?._id
-})
+    video: videoId,
+    owner: req.user?._id,
+  });
 
+  if (!comment) {
+    throw new ApiError(500, `Failed to add the new Comment pls try again`);
+  }
 
-if(!comment){
-    throw new ApiError(500, `Failed to add the new Comment pls try again`)
-}
+  return res
+    .status(201)
+    .json(new ApiResponse(201, comment, "Comment added successFully"));
+});
 
+const updateComment = asyncHandlar(async (req, res) => {
+  // get the commentid  from params and get req body content
+  // find the comment by id
+  // check if the user is owner or not
+  // find and update the comment by $size
 
-return res
-.status(201)
-.json(new ApiResponse(201, comment, "Comment added successFully"))
+  const { commentId } = req.params;
+  const { content } = req.body;
 
+  if (!content) {
+    throw new ApiError(404, "Content is required");
+  }
 
-})
+  const comment = await Comment.findById(commentId);
 
+  if (!comment) {
+    throw new ApiError(500, `no Comment Found`);
+  }
 
-const updateComment = asyncHandlar(async(req,res)=>{
-// get the commentid  from params and get req body content 
-// find the comment by id 
-// check if the user is owner or not 
-// find and update the comment by $size
+  if (comment.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(400, "only comment owner can edit thier comment");
+  }
 
-
-const {commentId} = req.params
-const {content} = req.body
-
-if(!content){
-    throw new ApiError(404, "Content is required")
-}
-
- const comment = await Comment.findById(commentId)
-
-if(!comment){
-throw new ApiError(500, `no Comment Found`)
-}
-
-
-if(comment.owner.toString() !== req.user?._id.toString()){
-    throw new ApiError(400, 'only comment owner can edit thier comment')
-}
-
- const updatedComment = await Comment.findByIdAndUpdate(
+  const updatedComment = await Comment.findByIdAndUpdate(
     comment?._id,
     {
-        $set :{
-            content
-        }
+      $set: {
+        content,
+      },
     },
-    {new : true}
-)
+    { new: true },
+  );
 
-if(!updateComment){
-    throw new ApiError(500,"Failed to edit the comment pls try again")
-}
+  if (!updateComment) {
+    throw new ApiError(500, "Failed to edit the comment pls try again");
+  }
 
-return res
-.status(200)
-.json(
-    new ApiResponse(200, updateComment, "Comment edited sucessfully")
-)
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updateComment, "Comment edited sucessfully"));
+});
 
+const deleteComment = asyncHandlar(async (req, res) => {
+  // find the comment id and conditon it
+  // find the id of comment id
+  // check if the user is owner or not
+  // find the id and delete
+  // delete the like also with deleteMany
 
-})
+  const { commentId } = req.params;
 
+  const comment = await Comment.findById(commentId);
 
-const deleteComment = asyncHandlar(async(req,res)=>{
+  if (!comment) {
+    throw new ApiError(404, "Comment not Found");
+  }
 
-    // find the comment id and conditon it 
-    // find the id of comment id
-    // check if the user is owner or not 
-    // find the id and delete 
-    // delete the like also with deleteMany 
+  if (comment?.owner.toString() !== req.user?._id.toString()) {
+    throw new ApiError(400, `only owner can delete their comment`);
+  }
 
+  await Comment.findByIdAndDelete(commentId);
 
-const {commentId} = req.params
+  await Like.deleteMany({
+    comment: commentId,
+    likedBy: req.user,
+  });
 
-const comment = await Comment.findById(commentId)
+  return res
+    .status(200)
+    .json(new ApiResponse(), { commentId }`Comment Deleted Sucessfully`);
+});
 
-if(!comment){
-    throw new ApiError(404, "Comment not Found")
-}
-
-if(comment?.owner.toString() !== req.user?._id.toString()){
-    throw new ApiError(400, `only owner can delete their comment`)
-}
-
-
-await Comment.findByIdAndDelete(commentId)
-
-
-await Like.deleteMany({
-    comment :commentId,
-    likedBy :req.user
-})
-
-return res
-.status(200)
-.json(new ApiResponse, {commentId}`Comment Deleted Sucessfully`)
-
-
-})
-
-export {
-    getVideoComments,
-    addComment,
-    updateComment,
-    deleteComment,
-}
+export { getVideoComments, addComment, updateComment, deleteComment };

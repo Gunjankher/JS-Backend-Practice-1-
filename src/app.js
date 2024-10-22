@@ -29,6 +29,7 @@ import tweetRouter from './routes/tweet.router.js'
 import playlistRouter from './routes/playlist.router.js'
 import healthRouter from './routes/healthcheck.router.js' 
 import subscripitonRouter from './routes/subscription.router.js'
+import dashboardRouter from './routes/dashboard.router.js'
 
 // Route Declaraion 
 
@@ -40,6 +41,7 @@ app.use("/api/v1/tweet", tweetRouter)
 app.use("/api/v1/playlist",playlistRouter)
 app.use("/api/v1/healthcheck",healthRouter)
 app.use("/api/v1/subscription",subscripitonRouter)
+app.use("/api/v1/dashboard",dashboardRouter)
 
 
 
